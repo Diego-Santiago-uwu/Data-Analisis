@@ -1,26 +1,41 @@
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
+import re
+
+def parse_rating(rating_text):
+    # Extraer la opinión, puntuación general y facilidad usando expresiones regulares
+    match = re.search(r'(\D+)(\d+\.?\d*)Calidad General(\d+\.?\d*)Facilidad', rating_text)
+    if match:
+        return match.group(1).strip(), match.group(2), match.group(3)
+    return '', '', ''
 
 def auto_Scrapper_Class(html_soup, course_case, professor_id):
     rows = html_soup.find_all('tr')[1:]  # Saltar el encabezado de la tabla
 
     for row in rows:
-        # Extraer los elementos de cada fila
         date = row.find('div', class_='date').get_text(strip=True) if row.find('div', class_='date') else ''
-        rating = row.find('div', class_='rating-block').get_text(strip=True) if row.find('div', class_='rating-block') else ''
+        rating_block = row.find('div', class_='rating-block')
+        rating_text = rating_block.get_text(strip=True) if rating_block else ''
+        opinion, general_score, facility = parse_rating(rating_text)
         class_name = row.find('span', class_='response').get_text(strip=True) if row.find('span', class_='response') else ''
-        comments = row.find('p', class_='commentsParagraph').get_text(strip=True) if row.find('p', class_='commentsParagraph') else ''
+        comment_element = row.find('p', class_='commentsParagraph')
+        if comment_element:
+            comments = comment_element.get_text(strip=True)
+            if not comments:  # Si los comentarios están vacíos (cadena vacía)
+                comments = None
+        else:
+            comments = None
 
-        # Agregar al dataset
         course_case.append({
             'professor_id': professor_id,
             'date': date,
-            'rating': rating,
+            'opinion': opinion,
+            'general_score': general_score,
+            'facility': facility,
             'class': class_name,
-            'comment': comments
+            'personal_comment': comments
         })
-
 def main():
     data = []
     links = [

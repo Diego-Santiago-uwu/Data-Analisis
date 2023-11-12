@@ -30,9 +30,9 @@ def main():
 
     # Inicialización del TfidfVectorizer con stop words en español
     tfidf_espanol = TfidfVectorizer(stop_words=stop_words_espanol)
-    data['comment'] = data['comment'].fillna('')
+    data['personal_comment'] = data['personal_comment'].fillna('')
 
-    overview_matrix = tfidf_espanol.fit_transform(data['comment'])
+    overview_matrix = tfidf_espanol.fit_transform(data['personal_comment'])
     print(overview_matrix.shape)
 
     similarity_matrix = linear_kernel(overview_matrix, overview_matrix)
